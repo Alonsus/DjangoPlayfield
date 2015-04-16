@@ -17,7 +17,7 @@ ip = '134.201.250.155' # los angeles
 
 def indexView(request):
 	# testing on localhost makes this line useless
-	# ip = request.META.get('REMOTE_ADDR', None)
+	ip = request.META.get('REMOTE_ADDR', None)
 	
 	
 	place = gi.record_by_addr(ip)
