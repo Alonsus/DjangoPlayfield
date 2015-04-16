@@ -1,51 +1,61 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.http import HttpResponse
-from django.core.urlresolvers import reverse
-from django.views import generic
-from django.utils import timezone
-from geopy.distance import vincenty
 import time
 
 import pygeoip
+from geopy.distance import vincenty
 
-# Create your views here.
-
+# grab data for IP addresses at the start
 gi = pygeoip.GeoIP('static/GeoLiteCity.dat')
 
-def indexView(request):
+def getIpFromRequest(request):	
 	# heroku hack
 	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
+	# if not heroku
 	if ip is None:
 		ip = request.META.get('REMOTE_ADDR', None)
-	place = gi.record_by_addr(ip)
-	niceAddress = "Unable to get place"
+	return ip
+
+def getPlaceFromRequest(request):
+	ip = getIpFromRequest(request)
+	return gi.record_by_addr(ip)
+	
+# Index Page
+def indexView(request):
 	template_name = 'geodistance/index.html'
+
+	place = getPlaceFromRequest(request)
+	
+	niceAddress = "Unable to get place"
+	
 	if place is not None:
 		if place['metro_code'] is not None:
+			# try to use "Los Angeles, CA" format
 			niceAddress = place['metro_code']
 		elif place['city'] is not None:
+			# use "Los Angeles" if above not available
 			niceAddress = place['city']
 		else:
+			# if city is unknown, display as such.
 			niceAddress = "Unknown city"
+			
 		if place['country_code3'] is not None:
+			# try to grab country code
 			niceAddress = niceAddress + ', ' + place['country_code3']
 		
 	return render (request, template_name, {
-		'place': place,
 		'address': niceAddress,
-		'ip': ip
+		'ip': getIpFromRequest(request)
 	})
-	
+
 def calculate(request):
-	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
-	if ip is None:
-		ip = request.META.get('REMOTE_ADDR', None)
-	place = gi.record_by_addr(ip)
+	place = getPlaceFromRequest(request)
+	
 	localLatitude = place['latitude']
 	localLongitude = place['longitude']
 	remoteLatitude = request.POST['latitude']
 	remoteLongitude = request.POST['longitude']
-	output = "(" + str(localLatitude) + ", " + str(localLongitude) + ")  -  (" + str(remoteLatitude) + ", " + str(remoteLongitude) + ")"
-	distance = vincenty((localLatitude, localLongitude), (remoteLatitude, remoteLongitude))
-	time.sleep(1)
-	return HttpResponse(distance )
+	
+	distance = vincenty((localLatitude, localLongitude), (remoteLatitude, remoteLongitude)).miles
+	distance = str(round(distance,2)) + " mi"
+	return HttpResponse(distance)

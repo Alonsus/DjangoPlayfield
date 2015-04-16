@@ -1,7 +1,0 @@
-[client]
-database = geodistance
-user = root
-password = 
-default-character-set = utf8
-host = localhost
-port = 3306

@@ -1,77 +1,93 @@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
-
-You are from
-<span id="address">{{ address }}</span> with ip {{ ip }}
-{% csrf_token %}
-<input type="text" placeholder="Destination" id="destination" />
-<br/>
-<span id="result"></span>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-{{ place }}
-
-<script>
-
-	function getCookie(name) {
-	var cookieValue = null;
-	if (document.cookie && document.cookie != '') {
-		var cookies = document.cookie.split(';');
-		for (var i = 0; i < cookies.length; i++) {
-			var cookie = jQuery.trim(cookies[i]);
-			// Does this cookie string begin with the name we want?
-			if (cookie.substring(0, name.length + 1) == (name + '=')) {
-				cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-				break;
-			}
-		}
-	}
-		return cookieValue;
-	}
-	// in case cookie isn't set, use csrf in html
-	// heroku seems to disable cookies?
-	var csrftoken = getCookie('csrftoken');
-	if (!csrftoken){
-		csrftoken = $('[name="csrfmiddlewaretoken"]').val();
-	}
-	function csrfSafeMethod(method) {
-		// these HTTP methods do not require CSRF protection
-		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-	}
-	$.ajaxSetup({
-		crossDomain: false, // obviates need for sameOrigin test
-		beforeSend: function(xhr, settings) {
-			if (!csrfSafeMethod(settings.type)) {
-				xhr.setRequestHeader("X-CSRFToken", csrftoken);
-			}
-		}
-	});
-
-	var input = document.getElementById('destination');
-	var autocomplete = new google.maps.places.Autocomplete(input);
+<html>
+	<head>
+		<title>Geolocate with destinations</title>
+	</head>
+	<body>
+		<label>User location: </label>
+		<span id="address">{{ address }}</span> (received IP address: {{ ip }})
+		<!-- csrf token here is Heroku hack -->
+		{% csrf_token %}
+		<br/>
+		<label for="destination">New Location: </label>
+		<input type="text" placeholder="New Location" id="destination" />
+		<br/>
+		<br/>
+		<table id="resultTable" style="display: none">
+			<thead>
+				<tr>
+					<th>Destination</th>
+					<th>Distance</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</body>
 	
-	
-	google.maps.event.addListener(autocomplete, 'place_changed', function(){
-		console.log(autocomplete.getPlace());
-		var place = autocomplete.getPlace();
-		var latitude = place.geometry.location.k;
-		var longitude = place.geometry.location.D;
-		$('#result').text('Calculating...');
-		$.ajax({
-			url: 'calculate/',
-			type: 'POST',
-			data: { 
-					'latitude': latitude,
-					'longitude': longitude 
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places"></script>
+	<script>
+
+		function getCookie(name) {
+		var cookieValue = null;
+		if (document.cookie && document.cookie != '') {
+			var cookies = document.cookie.split(';');
+			for (var i = 0; i < cookies.length; i++) {
+				var cookie = jQuery.trim(cookies[i]);
+				// Does this cookie string begin with the name we want?
+				if (cookie.substring(0, name.length + 1) == (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
 				}
-		}).done(function(data){
-			$('#result').text("distance from " + $('#address').text() + " to " + $('#destination').val() + " is " + data);
+			}
+		}
+			return cookieValue;
+		}
+		// in case cookie isn't set, use csrf in html
+		// heroku seems to disable cookies?
+		var csrftoken = getCookie('csrftoken');
+		if (!csrftoken){
+			csrftoken = $('[name="csrfmiddlewaretoken"]').val();
+		}
+		function csrfSafeMethod(method) {
+			// these HTTP methods do not require CSRF protection
+			return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+		}
+		$.ajaxSetup({
+			crossDomain: false, // obviates need for sameOrigin test
+			beforeSend: function(xhr, settings) {
+				if (!csrfSafeMethod(settings.type)) {
+					xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				}
+			}
 		});
-	});
-</script>
+
+		var destinationInput = $('#destination');
+		var autocomplete = new google.maps.places.Autocomplete(destinationInput[0]);
+		
+		
+		google.maps.event.addListener(autocomplete, 'place_changed', function(){
+			console.log(autocomplete.getPlace());
+			var place = autocomplete.getPlace();
+			var latitude = place.geometry.location.k;
+			var longitude = place.geometry.location.D;
+			$('#result').text('Calculating...');
+			destinationInput.val('');
+			$.ajax({
+				url: 'calculate/',
+				type: 'POST',
+				data: { 
+						'latitude': latitude,
+						'longitude': longitude 
+					}
+			}).done(function(data){
+				$('#resultTable').show();
+				row = $('<tr></tr>');
+				row.append($('<td>' + place.formatted_address + '</td><td>' + data + '</td>'));
+				$('#resultTable').prepend(row);
+				//$('#result').text("Distance between locations: " + data);
+			});
+		});
+		
+	</script>
+</html>
