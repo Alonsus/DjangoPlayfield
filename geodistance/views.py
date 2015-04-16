@@ -21,17 +21,18 @@ def indexView(request):
 	
 	
 	place = gi.record_by_addr(ip)
-	
-	if place['metro_code'] is None:
-		niceAddress = place['city']
-	else:
-		niceAddress = place['metro_code']
-	
-	
-	niceAddress = niceAddress + ', ' + place['country_code3']
-	
-	#place = "This is my new place"
+	niceAddress = "Unable to get place"
 	template_name = 'geodistance/index.html'
+	if place is not None:
+		if place['metro_code'] is None:
+			niceAddress = place['city']
+		else:
+			niceAddress = place['metro_code']
+		
+		
+		niceAddress = niceAddress + ', ' + place['country_code3']
+		
+		#place = "This is my new place"
 	return render (request, template_name, {
 		'place': place,
 		'address': niceAddress,
