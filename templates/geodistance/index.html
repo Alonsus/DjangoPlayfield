@@ -3,7 +3,7 @@
 
 You are from
 <span id="address">{{ address }}</span> with ip {{ ip }}
-
+{% csrf_token %}
 <input type="text" placeholder="Destination" id="destination" />
 <br/>
 <span id="result"></span>
@@ -34,7 +34,12 @@ You are from
 	}
 		return cookieValue;
 	}
+	// in case cookie isn't set, use csrf in html
+	// heroku seems to disable cookies?
 	var csrftoken = getCookie('csrftoken');
+	if (!csrftoken){
+		csrftoken = $('[name="csrfmiddlewaretoken"]').val();
+	}
 	function csrfSafeMethod(method) {
 		// these HTTP methods do not require CSRF protection
 		return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));

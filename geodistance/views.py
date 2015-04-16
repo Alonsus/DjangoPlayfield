@@ -32,10 +32,9 @@ def indexView(request):
 		else:
 			niceAddress = place['metro_code']
 		
+		if place['country_code3'] is not None:
+			niceAddress = niceAddress + ', ' + place['country_code3']
 		
-		niceAddress = niceAddress + ', ' + place['country_code3']
-		
-		#place = "This is my new place"
 	return render (request, template_name, {
 		'place': place,
 		'address': niceAddress,
