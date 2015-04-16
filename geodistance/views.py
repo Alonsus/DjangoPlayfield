@@ -23,7 +23,6 @@ def getPlaceFromRequest(request):
 # Index Page
 def indexView(request):
 	template_name = 'geodistance/index.html'
-
 	place = getPlaceFromRequest(request)
 	
 	niceAddress = "Unable to get place"
@@ -53,8 +52,8 @@ def calculate(request):
 	
 	localLatitude = place['latitude']
 	localLongitude = place['longitude']
-	remoteLatitude = request.POST['latitude']
-	remoteLongitude = request.POST['longitude']
+	remoteLatitude = request.GET['latitude']
+	remoteLongitude = request.GET['longitude']
 	
 	distance = vincenty((localLatitude, localLongitude), (remoteLatitude, remoteLongitude)).miles
 	distance = str(round(distance,2)) + " mi"
