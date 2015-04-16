@@ -16,8 +16,10 @@ ip = '134.201.250.155' # los angeles
 #ip = '94.253.190.183' # Zagreb
 
 def indexView(request):
-	# testing on localhost makes this line useless
-	ip = request.META.get('REMOTE_ADDR', None)
+	# how it should be done
+	#ip = request.META.get('REMOTE_ADDR', None)
+	# heroku hack
+	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
 	
 	
 	place = gi.record_by_addr(ip)
