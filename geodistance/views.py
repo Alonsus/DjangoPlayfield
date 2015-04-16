@@ -11,13 +11,8 @@ import pygeoip
 # Create your views here.
 
 gi = pygeoip.GeoIP('static/GeoLiteCity.dat')
-# use static ip for testing
-ip = '134.201.250.155' # los angeles
-#ip = '94.253.190.183' # Zagreb
 
 def indexView(request):
-	# how it should be done
-	#ip = request.META.get('REMOTE_ADDR', None)
 	# heroku hack
 	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
 	if ip is None:
@@ -42,6 +37,9 @@ def indexView(request):
 	})
 	
 def calculate(request):
+	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
+	if ip is None:
+		ip = request.META.get('REMOTE_ADDR', None)
 	place = gi.record_by_addr(ip)
 	localLatitude = place['latitude']
 	localLongitude = place['longitude']
