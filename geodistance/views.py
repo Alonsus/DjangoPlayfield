@@ -20,7 +20,8 @@ def indexView(request):
 	#ip = request.META.get('REMOTE_ADDR', None)
 	# heroku hack
 	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
-	
+	if ip is None:
+		ip = request.META.get('REMOTE_ADDR', None)
 	
 	place = gi.record_by_addr(ip)
 	niceAddress = "Unable to get place"
