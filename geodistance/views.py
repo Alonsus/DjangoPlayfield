@@ -17,16 +17,16 @@ def indexView(request):
 	ip = request.META.get('HTTP_X_FORWARDED_FOR', None)
 	if ip is None:
 		ip = request.META.get('REMOTE_ADDR', None)
-	
 	place = gi.record_by_addr(ip)
 	niceAddress = "Unable to get place"
 	template_name = 'geodistance/index.html'
 	if place is not None:
-		if place['metro_code'] is None:
+		if place['metro_code'] is not None:
+			niceAddress = place['metro_code']
+		elif place['city'] is not None:
 			niceAddress = place['city']
 		else:
-			niceAddress = place['metro_code']
-		
+			niceAddress = "Unknown city"
 		if place['country_code3'] is not None:
 			niceAddress = niceAddress + ', ' + place['country_code3']
 		
